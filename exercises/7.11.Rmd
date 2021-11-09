@@ -8,28 +8,80 @@ __In Section 7.7, it was mentioned that GAMs are generally fit using a backfitti
 
 a. __Generate a response Y and two predictors X1 and X2, with n = 100.__
 
-<!-- enter your solution here -->
+```{r}
+set.seed(1)
+y <- rnorm(100)
+x1 <- rnorm(100)
+x2 <- rnorm(100)
+beta1 <- 3.27
+```
+
 
 b. __Initialize $\beta_1$ to take on a value of your choice. It does not matter what value you choose.__
+```{r}
+set.seed(1)
+y <- rnorm(100)
+x1 <- rnorm(100)
+x2 <- rnorm(100)
+beta1 <- 3.27
+```
 
-<!-- enter your solution here -->
 
 c. __Keeping $\beta_1$ fixed, fit the model...You can do this as follows:__
 
-<!-- enter your solution here -->
+```{r}
+a <- y - beta1 * x1
+beta2 <- lm(a ~ x2)$coef[2]
+```
+
 
 d. __Keeping $\beta_2$ fixed, fit the model...You can do this as follows:__
 
-<!-- enter your solution here -->
+```{r}
+a <- y - beta2 * x2
+beta1 <- lm(a ~ x1)$coef[2]
+```
+
 
 e. __Write a for loop to repeat (c) and (d) 1,000 times. Report the estimates of $\beta_0$, $\beta_1$, and $\beta_2$ at each iteration of the for loop. Create a plot in which each of these values is displayed, with $\beta_0$, $\beta_1$, and $\beta_2$ each shown in a different color.__
 
-<!-- enter your solution here -->
+```{r}
+iter <- 10
+df <- data.frame(0.0, 0.27, 0.0)
+names(df) <- c('beta0', 'beta1', 'beta2')
+for (i in 1:iter) {
+  beta1 <- df[nrow(df), 2]
+  a <- y - beta1 * x1
+  beta2 <- lm(a ~ x2)$coef[2]
+  a <- y - beta2 * x2
+  beta1 <- lm(a ~ x1)$coef[2]
+  beta0 <- lm(a ~ x1)$coef[1]
+  print(beta0)
+  print(beta1)
+  print(beta2)
+  df[nrow(df) + 1,] <- list(beta0, beta1, beta2)
+}
+```
+```{r}
+plot(df$beta0, col = 'red', type = 'l')
+lines(df$beta1, col = 'blue')
+lines(df$beta2, col = 'green')
+```
+
 
 f. __Compare your answer in (e) to the results of simply performing multiple linear regression to predict Y using X1 and X2. Use the `abline()` function to overlay those multiple linear regression coefficient estimates on the plot obtained in (e).__
 
-<!-- enter your solution here -->
+```{r}
+plot(df$beta0, col = 'red', type = 'l')
+lines(df$beta1, col = 'blue')
+lines(df$beta2, col = 'green')
+res <- coef(lm(y ~ x1 + x2))
+abline(h = res[1], col = 'darkred', lty = 2)
+abline(h = res[2], col = 'darkblue', lty = 2)
+abline(h = res[3], col = 'darkgreen', lty = 2)
+```
+
 
 g. __On this data set, how many backfitting iterations were required in order to obtain a “good” approximation to the multiple regression coefficient estimates?__
 
-<!-- enter your solution here -->
+3 iterations are enough to converge for this specific dataset.

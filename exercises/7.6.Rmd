@@ -8,8 +8,59 @@ __In this exercise, you will further analyze the Wage data set considered throug
 
 a. __Perform polynomial regression to predict wage using age. Use cross-validation to select the optimal degree d for the polynomial. What degree was chosen, and how does this compare to the results of hypothesis testing using ANOVA? Make a plot of the resulting polynomial fit to the data.__
 
-<!-- enter your solution here -->
+```{r}
+deltas = rep(NA, 10)
+for (i in 1:10) {
+  glm.model = glm(wage~poly(age, i), data=Wage)
+  deltas[i] = cv.glm(Wage, glm.model, K=10)$delta[2]
+}
+
+data <- data.table(seq(1:10),deltas,keep.rownames = TRUE)
+
+sd(deltas)
+```
+
+```{r}
+ggplot(data, aes(V1,deltas))+geom_line()
+```
+```{r}
+fit.1 = lm(wage~poly(age, 1), data=Wage)
+fit.2 = lm(wage~poly(age, 2), data=Wage)
+fit.3 = lm(wage~poly(age, 3), data=Wage)
+fit.4 = lm(wage~poly(age, 4), data=Wage)
+fit.5 = lm(wage~poly(age, 5), data=Wage)
+fit.6 = lm(wage~poly(age, 6), data=Wage)
+fit.7 = lm(wage~poly(age, 7), data=Wage)
+fit.8 = lm(wage~poly(age, 8), data=Wage)
+fit.9 = lm(wage~poly(age, 9), data=Wage)
+fit.10 = lm(wage~poly(age, 10), data=Wage)
+anova(fit.1, fit.2, fit.3, fit.4, fit.5, fit.6, fit.7, fit.8, fit.9, fit.10)
+```
+```{r}
+ggplot(Wage, aes(age,wage)) + geom_point(color="green") + 
+stat_smooth(method = "lm", formula = y ~ poly(x, 3), size = 1)
+```
+
 
 b. __Fit a step function to predict wage using age, and perform cross-validation to choose the optimal number of cuts. Make a plot of the fit obtained.__
 
-<!-- enter your solution here -->
+```{r}
+cvs = rep(NA, 10)
+for (i in 2:10) {
+  Wage$cut.point = cut(Wage$age, i)
+  lm.fit = glm(wage~cut.point, data=Wage)
+  cvs[i] = cv.glm(Wage, lm.fit, K=10)$delta[2]
+}
+
+cvs.data <- data.table(c(2,3,4,5,6,7,8,9,10),cvs[-1])
+
+ggplot(cvs.data, aes(V1,V2)) + geom_line()
+```
+```{r}
+fit <- glm(wage~cut(age, 8), data=Wage)
+prediction <- predict(fit, data.frame(age = seq(from=18,to=80)))
+pre <- data.table(seq(from=18,to=80),prediction,keep.rownames = TRUE)
+
+ggplot(Wage, aes(age,wage)) + geom_point(color="green") + geom_line(data = pre, aes(V1,prediction), size= 1)
+```
+

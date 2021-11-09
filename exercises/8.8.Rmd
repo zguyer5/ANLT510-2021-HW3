@@ -8,20 +8,74 @@ __In the lab, a classification tree was applied to the Carseats data set after c
 
 a. __Split the data set into a training set and a test set.__
 
-<!-- enter your solution here -->
+```{r}
+library(ISLR)
+set.seed(1)
+train <- sample(1:nrow(Carseats), nrow(Carseats) / 2)
+Carseats.train <- Carseats[train, ]
+Carseats.test <- Carseats[-train, ]
+```
+
 
 b. __Fit a regression tree to the training set. Plot the tree, and interpret the results. What test MSE do you obtain?__
 
-<!-- enter your solution here -->
+```{r}
+library(tree)
+tree.carseats <- tree(Sales ~ ., data = Carseats.train)
+summary(tree.carseats)
+
+plot(tree.carseats)
+text(tree.carseats, pretty = 0)
+
+yhat <- predict(tree.carseats, newdata = Carseats.test)
+mean((yhat - Carseats.test$Sales)^2)
+```
+~ 4.15
 
 c. __Use cross-validation in order to determine the optimal level of tree complexity. Does pruning the tree improve the test MSE?__
 
-<!-- enter your solution here -->
+```{r}
+cv.carseats <- cv.tree(tree.carseats)
+plot(cv.carseats$size, cv.carseats$dev, type = "b")
+tree.min <- which.min(cv.carseats$dev)
+points(tree.min, cv.carseats$dev[tree.min], col = "red", cex = 2, pch = 20)
+```
+```{r}
+prune.carseats <- prune.tree(tree.carseats, best = 8)
+plot(prune.carseats)
+text(prune.carseats, pretty = 0)
+
+```
+```{r}
+yhat <- predict(prune.carseats, newdata = Carseats.test)
+mean((yhat - Carseats.test$Sales)^2)
+```
+The test improves to 5.1
 
 d. __Use the bagging approach in order to analyze this data. What test MSE do you obtain? Use the `importance()` function to determine which variables are most important.__
 
-<!-- enter your solution here -->
+```{r}
+library(randomForest)
+set.seed(1)
+bag.carseats = randomForest(Sales~.,data=Carseats,mtry=10,subset=train,importance=T)
+bag.carseats
+yhat.bag = predict(bag.carseats,newdata=Carseats[-train,])
+importance(bag.carseats)
+varImpPlot(bag.carseats)
+```
+```{r}
+importance(bag.carseats)
+```
+
 
 e. __Use random forests to analyze this data. What test MSE do you obtain? Use the `importance()` function to determine which variables are most important. Describe the effect of m, the number of variables considered at each split, on the error rate obtained__
 
-<!-- enter your solution here -->
+```{r}
+rf.carseats <- randomForest(Sales ~ ., data = Carseats.train, mtry = 3, ntree = 500, importance = TRUE)
+yhat.rf <- predict(rf.carseats, newdata = Carseats.test)
+mean((yhat.rf - Carseats.test$Sales)^2)
+```
+```{r}
+importance(rf.carseats)
+```
+The more important variables consist of "Price" and "ShelveLoc"
